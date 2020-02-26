@@ -3,7 +3,7 @@ Use Task-based asynchronous pattern (TAP) to run Revit API code from any executi
 
 # Background
 If you have ever encountered a Revit API exception saying "Cannot execute Revit API outside of Revit API context",
-a usual case is you want to execute Revit API code from a modeless window, you may need this library to save your life.
+typically when you want to execute Revit API code from a modeless window, you may need this library to save your life.
 
 A common solution for this exception is to wrap the Revit API code using IExternalEventHandler and register the handler instance to Revit ahead of time to get a trigger(ExternalEvent).To execute the handler, just raise the trigger from anywhere to queue the handler to the revit command loop.
 But there comes another problem. After raising the trigger, within the same context, you have no idea when the handler will be executed and it's not easy to get some result generated from that handler. If you do want to make this happen, you have to manually yield the control back to the calling context.
@@ -12,7 +12,7 @@ This solution looks quite similar to the mechanism of "Promise" if you are famil
 Actually we can achieve all the above logic by making use of Task-based asynchronous pattern (TAP) which is generally known as Task<T> in .NET.
 By adopting RevitTask, it's possible to run Revit API code from any context because internally RevitTask wraps your code automatically with IExternalEventHandler and yields the return value to the calling context to make your invocation more natural.
 
-If you are not familiar with Task-based asynchronous pattern (TAP),Here are some useful materials provided by Microsoft:
+If you are not familiar with Task-based asynchronous pattern (TAP), Here are some useful materials provided by Microsoft:
 https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
 https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model
 
@@ -164,6 +164,125 @@ public class ButtonCommand : ICommand
     }
 }
 ```
+## Define your own handler
+
+Fed up with the weak `IExternalEventHandler` interface? Use the `IGenericExternalEventHandler<TParameter,TResult>` interface instead. It provides you with the ability to pass argument to a handler and receive result on complete.
+
+It's always recommended to derive from the predefined abstract classes, they are designed to handle the argument passing and result returning part.
+
+| Class                                                   | Description                       |
+| ------------------------------------------------------- | --------------------------------- |
+| `AsyncGenericExternalEventHandler<TParameter, TResult>` | Use to execute asynchronous logic |
+| `SyncGenericExternalEventHandler<TParameter, TResult>`  | Use to execute synchronize logic  |
+
+```csharp
+[Transaction(TransactionMode.Manual)]
+public class MyRevitCommand : IExternalCommand
+{
+    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+    {
+        RevitTask.Initialize();
+        //Register SaveFamilyToDesktopExternalEventHandler ahead of time
+        RevitTask.Register(new SaveFamilyToDesktopExternalEventHandler());
+        var window = new MyWindow();
+        //Show modeless window
+        window.Show();
+        return Result.Succeeded;
+    }
+}
+
+public class MyWindow : Window
+{
+    public MyWindow()
+    {
+        InitializeComponents();
+    }
+
+    private void InitializeComponents()
+    {
+        Width                 = 200;
+        Height                = 100;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        var button = new Button
+        {
+            Content             = "Save Random Family",
+            Command             = new ButtonCommand(),
+            CommandParameter    = true,
+            VerticalAlignment   = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        Content = button;
+    }
+}
+
+public class ButtonCommand : ICommand
+{    
+    public bool CanExecute(object parameter)
+    {
+        return true;
+    }
+
+    public event EventHandler CanExecuteChanged;
+
+    public async void Execute(object parameter)
+    {
+        var savePath = await RevitTask.RunAsync(
+            async app =>
+            {
+                try
+                {
+                    var document = app.ActiveUIDocument.Document;
+                    var randomFamily = await RevitTask.RunAsync(
+                        () =>
+                        {
+                            var families = new FilteredElementCollector(document)
+                                .OfClass(typeof(Family))
+                                .Cast<Family>()
+                                .Where(family => family.IsEditable)
+                                .ToArray();
+                            var random = new Random(Environment.TickCount);
+                            return families[random.Next(0, families.Length)];
+                        });
+
+                    //Raise your own handler
+                    return await RevitTask.Raise<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            });
+        var saveResult = !string.IsNullOrWhiteSpace(savePath);
+        MessageBox.Show($"Family {(saveResult ? "" : "not ")}saved:\n{savePath}");
+        if (saveResult)
+        {
+            Process.Start(Path.GetDirectoryName(savePath));
+        }
+    }
+}
+
+public class SaveFamilyToDesktopExternalEventHandler : 			
+	SyncGenericExternalEventHandler<Family, string>
+{
+    public override string GetName()
+    {
+        return "SaveFamilyToDesktopExternalEventHandler";
+    }
+
+    protected override string Handle(UIApplication app, ExternalEventData<Family, string> data)
+    {
+        //write sync logic here
+        var document       = data.Parameter.Document;
+        var familyDocument = document.EditFamily(data.Parameter);
+        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        var path = Path.Combine(desktop, $"{data.Parameter.Name}.rfa");
+        familyDocument.SaveAs(path, new SaveAsOptions {OverwriteExistingFile = true});
+        return path;
+    }
+}
+```
+
+
 
 # Todos
 
