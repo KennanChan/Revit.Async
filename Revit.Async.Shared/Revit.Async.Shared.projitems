@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>26214b67-5134-4c0a-86a6-51128e71afe2</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Revit.Async</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\ExternalEventData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\ExternalEventPair.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\TaskCompletionSourceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\AsyncGenericExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\SyncGenericExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\TaskUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\GenericExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\SyncDelegateExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\AsyncDelegateExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IGenericExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RevitTask.cs" />
+  </ItemGroup>
+</Project>
