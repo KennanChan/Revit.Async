@@ -8,6 +8,7 @@ using Revit.Async.Entities;
 using Revit.Async.ExternalEvents;
 using Revit.Async.Interfaces;
 using Revit.Async.Utils;
+
 #if NET40
 using Revit.Async.Extensions;
 
@@ -24,7 +25,8 @@ namespace Revit.Async
     {
         #region Fields
 
-        private static ConcurrentDictionary<Type, ExternalEventPair> _delegateExternalEvents;
+        private static ConcurrentDictionary<Type, ExternalEventPair> _asyncDelegateExternalEvents;
+        private static ConcurrentDictionary<Type, ExternalEventPair> _syncDelegateExternalEvents;
         private static ConcurrentDictionary<Type, ExternalEventPair> _registeredExternalEvents;
 
         #endregion
@@ -32,10 +34,16 @@ namespace Revit.Async
         #region Properties
 
         /// <summary>
-        ///     Cache all the created <see cref="ExternalEvent" />s and their <see cref="IExternalEventHandler" />
+        ///     Cache all the created <see cref="ExternalEvent" />s and their <see cref="IExternalEventHandler" /> running async code
         /// </summary>
-        private static ConcurrentDictionary<Type, ExternalEventPair> DelegateExternalEvents =>
-            _delegateExternalEvents ?? (_delegateExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
+        private static ConcurrentDictionary<Type, ExternalEventPair> AsyncDelegateExternalEvents =>
+            _asyncDelegateExternalEvents ?? (_asyncDelegateExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
+
+        /// <summary>
+        ///     Cache all the created <see cref="ExternalEvent" />s and their <see cref="IExternalEventHandler" /> running sync code
+        /// </summary>
+        private static ConcurrentDictionary<Type, ExternalEventPair> SyncDelegateExternalEvents =>
+            _syncDelegateExternalEvents ?? (_syncDelegateExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
 
         /// <summary>
         ///     Use to create any other external events
@@ -125,7 +133,7 @@ namespace Revit.Async
         /// <returns>The result</returns>
         public static Task<TResult> RunAsync<TResult>(Func<UIApplication, TResult> function)
         {
-            var externalEventPair = DelegateExternalEvents.GetOrAdd(typeof(TResult), _ =>
+            var externalEventPair = SyncDelegateExternalEvents.GetOrAdd(typeof(TResult), _ =>
             {
                 var handler = new SyncDelegateExternalEventHandler<TResult>();
                 return new ExternalEventPair(handler, () => CreateExternalEvent(handler));
@@ -158,7 +166,7 @@ namespace Revit.Async
         /// <returns></returns>
         public static Task<TResult> RunAsync<TResult>(Func<UIApplication, Task<TResult>> function)
         {
-            var externalEventPair = DelegateExternalEvents.GetOrAdd(typeof(TResult), _ =>
+            var externalEventPair = AsyncDelegateExternalEvents.GetOrAdd(typeof(TResult), _ =>
             {
                 var handler = new AsyncDelegateExternalEventHandler<TResult>();
                 return new ExternalEventPair(handler, () => CreateExternalEvent(handler));
