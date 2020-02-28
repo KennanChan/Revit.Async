@@ -3,7 +3,6 @@
 using System;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
-using Revit.Async.Entities;
 
 #endregion
 
@@ -24,9 +23,11 @@ namespace Revit.Async.ExternalEvents
             return "AsyncDelegateExternalEventHandler";
         }
 
-        protected override Task<TResult> Handle(UIApplication app, ExternalEventData<Func<UIApplication, Task<TResult>>, TResult> data)
+        protected override Task<TResult> Handle(
+            UIApplication                      app,
+            Func<UIApplication, Task<TResult>> parameter)
         {
-            return data.Parameter(app);
+            return parameter(app);
         }
 
         #endregion

@@ -7,6 +7,11 @@ using Autodesk.Revit.UI;
 
 namespace Revit.Async.Interfaces
 {
+    /// <summary>
+    ///     An interface to enhance <see cref="IExternalEventHandler"/> to support passing argument and returning result
+    /// </summary>
+    /// <typeparam name="TParameter"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
     public interface IGenericExternalEventHandler<in TParameter, TResult> : IExternalEventHandler
     {
         #region Others

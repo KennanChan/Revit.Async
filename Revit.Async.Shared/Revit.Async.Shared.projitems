@@ -9,11 +9,13 @@
     <Import_RootNamespace>Revit.Async</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Entities\ExternalEventData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\DefaultParameterAndResultHandlerPair.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Entities\ExternalEventPair.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ExternalEventResultHandlerExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\TaskCompletionSourceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\AsyncGenericExternalEventHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\SyncGenericExternalEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IExternalEventResultHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\TaskUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\GenericExternalEventHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExternalEvents\SyncDelegateExternalEventHandler.cs" />

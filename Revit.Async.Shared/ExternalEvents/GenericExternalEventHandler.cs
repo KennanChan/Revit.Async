@@ -10,46 +10,59 @@ using Revit.Async.Interfaces;
 
 namespace Revit.Async.ExternalEvents
 {
+    /// <inheritdoc />
     public abstract class GenericExternalEventHandler<TParameter, TResult> :
         IGenericExternalEventHandler<TParameter, TResult>
     {
         #region Fields
 
-        private ConcurrentQueue<ExternalEventData<TParameter, TResult>> _dataQueue;
+        private ConcurrentQueue<DefaultParameterAndResultHandlerPair<TParameter, TResult>> _parameterQueue;
 
         #endregion
 
         #region Properties
 
-        private ConcurrentQueue<ExternalEventData<TParameter, TResult>> DataQueue =>
-            _dataQueue ?? (_dataQueue = new ConcurrentQueue<ExternalEventData<TParameter, TResult>>());
+        private ConcurrentQueue<DefaultParameterAndResultHandlerPair<TParameter, TResult>> ParameterQueue =>
+            _parameterQueue ?? (_parameterQueue = new ConcurrentQueue<DefaultParameterAndResultHandlerPair<TParameter, TResult>>());
 
         #endregion
 
         #region Interface Implementations
 
+        /// <inheritdoc />
         public void Execute(UIApplication app)
         {
-            if (DataQueue.TryDequeue(out var data))
+            if (ParameterQueue.TryDequeue(out var data))
             {
-                Execute(app, data);
+                Execute(app, data.Parameter, data);
             }
         }
 
+        /// <inheritdoc />
         public abstract string GetName();
 
+        /// <inheritdoc />
         public Task<TResult> Prepare(TParameter parameter)
         {
-            var data = new ExternalEventData<TParameter, TResult>(parameter);
-            DataQueue.Enqueue(data);
-            return data.TaskCompletionSource.Task;
+            var tcs  = new TaskCompletionSource<TResult>();
+            var data = new DefaultParameterAndResultHandlerPair<TParameter, TResult>(parameter, tcs);
+            ParameterQueue.Enqueue(data);
+            return tcs.Task;
         }
 
         #endregion
 
         #region Others
 
-        protected abstract void Execute(UIApplication app, ExternalEventData<TParameter, TResult> data);
+        /// <summary>
+        ///     Override this method to execute some business code
+        /// </summary>
+        /// <param name="app">The revit top-level object, <see cref="UIApplication" /></param>
+        /// <param name="parameter">The parameter wraps the argument and some methods to set result</param>
+        /// <param name="resultHandler"></param>
+        protected abstract void Execute(UIApplication                        app,
+                                        TParameter                           parameter,
+                                        IExternalEventResultHandler<TResult> resultHandler);
 
         #endregion
     }

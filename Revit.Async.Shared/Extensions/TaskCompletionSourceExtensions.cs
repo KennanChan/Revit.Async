@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace Revit.Async.Extensions
 {
-    public static class TaskCompletionSourceExtensions
+    internal static class TaskCompletionSourceExtensions
     {
         #region Others
 
-        public static TaskCompletionSource<TResult> Await<TSource, TResult>(this TaskCompletionSource<TResult>             tcs,
-                                                                            Task<TSource>                                  source,
-                                                                            Action<TSource, TaskCompletionSource<TResult>> onComplete)
+        public static TaskCompletionSource<TResult> Await<TSource, TResult>(
+            this TaskCompletionSource<TResult>             tcs,
+            Task<TSource>                                  source,
+            Action<TSource, TaskCompletionSource<TResult>> onComplete)
         {
             source.ContinueWith(task =>
             {
@@ -33,9 +34,10 @@ namespace Revit.Async.Extensions
             return tcs;
         }
 
-        public static TaskCompletionSource<TResult> Await<TSource, TResult>(this TaskCompletionSource<TResult> tcs,
-                                                                            Task<TSource>                      source,
-                                                                            Action<TSource>                    onComplete)
+        public static TaskCompletionSource<TResult> Await<TSource, TResult>(
+            this TaskCompletionSource<TResult> tcs,
+            Task<TSource>                      source,
+            Action<TSource>                    onComplete)
         {
             source.ContinueWith(task =>
             {
@@ -58,8 +60,7 @@ namespace Revit.Async.Extensions
 #if NET40
 
 
-        public static TaskCompletionSource<TResult> Await<TResult>(this TaskCompletionSource<TResult> tcs,
-                                                                   Task<TResult>                      source)
+        public static TaskCompletionSource<TResult> Await<TResult>(this TaskCompletionSource<TResult> tcs, Task<TResult> source)
         {
             source.ContinueWith(task =>
             {
