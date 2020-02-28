@@ -273,13 +273,13 @@ public class SaveFamilyToDesktopExternalEventHandler :
         return "SaveFamilyToDesktopExternalEventHandler";
     }
 
-    protected override string Handle(UIApplication app, ExternalEventData<Family, string> data)
+    protected override string Handle(UIApplication app, Family parameter)
     {
         //write sync logic here
-        var document       = data.Parameter.Document;
-        var familyDocument = document.EditFamily(data.Parameter);
+        var document       = parameter.Document;
+        var familyDocument = document.EditFamily(parameter);
         var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-        var path = Path.Combine(desktop, $"{data.Parameter.Name}.rfa");
+        var path = Path.Combine(desktop, $"{parameter.Name}.rfa");
         familyDocument.SaveAs(path, new SaveAsOptions {OverwriteExistingFile = true});
         return path;
     }
