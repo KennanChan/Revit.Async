@@ -64,6 +64,7 @@
   <Import Project="..\Revit.Async.Shared\Revit.Async.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /s /f /y /e $(TargetDir)*.dll  $(SolutionDir)build\$(ConfigurationName)\net40\*.dll</PostBuildEvent>
+    <PostBuildEvent>rmdir /s /q $(SolutionDir)build\$(ConfigurationName)\net40
+xcopy /y /v $(TargetDir)*.*  $(SolutionDir)build\$(ConfigurationName)\net40\*.*</PostBuildEvent>
   </PropertyGroup>
 </Project>
