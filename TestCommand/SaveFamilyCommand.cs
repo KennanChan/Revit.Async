@@ -1,16 +1,39 @@
-﻿using System;
+﻿#region Reference
+
+using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Autodesk.Revit.DB;
 using Revit.Async;
+using Revit.Async.Interfaces;
+
+#endregion
 
 namespace TestCommand
 {
     internal class SaveFamilyCommand : ICommand
     {
+        #region Constructors
+
+        public SaveFamilyCommand()
+        {
+            //Create a RevitTask
+            ScopedRevitTask = new RevitTask();
+
+            //Register an external event handler to the scope
+            ScopedRevitTask.Register(new SaveFamilyToDesktopExternalEventHandler());
+        }
+
+        #endregion
+
+        #region Properties
+
+        private IRevitTask ScopedRevitTask { get; }
+
+        #endregion
+
         #region Interface Implementations
 
         public bool CanExecute(object parameter)
@@ -22,26 +45,17 @@ namespace TestCommand
 
         public async void Execute(object parameter)
         {
-            //Run Revit API directly from here
+            //Run Revit API directly here
             var savePath = await RevitTask.RunAsync(async app =>
             {
                 try
                 {
-                    var document = app.ActiveUIDocument.Document;
                     //Support async task
-                    var randomFamily = await RevitTask.RunAsync(() =>
-                    {
-                        var families = new FilteredElementCollector(document)
-                                      .OfClass(typeof(Family))
-                                      .Cast<Family>()
-                                      .Where(family => family.IsEditable)
-                                      .ToArray();
-                        var random = new Random(Environment.TickCount);
-                        return families[random.Next(0, families.Length)];
-                    });
+                    //Raise global external event handler
+                    var randomFamily = await RevitTask.RaiseGlobal<GetRandomFamilyExternalEventHandler, bool, Family>(parameter as bool? ?? false);
 
-                    //Raise your own generic external event handler
-                    return await RevitTask.Raise<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
+                    //Raise scoped external event handler
+                    return await ScopedRevitTask.Raise<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
                 }
                 catch (Exception)
                 {
@@ -50,9 +64,9 @@ namespace TestCommand
             });
             var saveResult = !string.IsNullOrWhiteSpace(savePath);
             MessageBox.Show($"Family {(saveResult ? "" : "not ")}saved:\n{savePath}");
-            if (saveResult)
+            if (saveResult && Path.GetDirectoryName(savePath) is string dir)
             {
-                Process.Start(Path.GetDirectoryName(savePath));
+                Process.Start(dir);
             }
         }
 

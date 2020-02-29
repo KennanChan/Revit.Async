@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command.cs" />
+    <Compile Include="GetRandomFamilyExternalEventHandler.cs" />
     <Compile Include="SaveFamilyToDesktopExternalEventHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveFamilyCommand.cs" />
