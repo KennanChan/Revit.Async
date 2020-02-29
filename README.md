@@ -187,7 +187,7 @@ public class MyRevitCommand : IExternalCommand
     {
         RevitTask.Initialize();
         //Register SaveFamilyToDesktopExternalEventHandler ahead of time
-        RevitTask.Register(new SaveFamilyToDesktopExternalEventHandler());
+        RevitTask.RegisterGlobal(new SaveFamilyToDesktopExternalEventHandler());
         var window = new MyWindow();
         //Show modeless window
         window.Show();
@@ -249,7 +249,7 @@ public class ButtonCommand : ICommand
                         });
 
                     //Raise your own handler
-                    return await RevitTask.Raise<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
+                    return await RevitTask.RaiseGlobal<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
                 }
                 catch (Exception)
                 {
@@ -291,6 +291,7 @@ public class SaveFamilyToDesktopExternalEventHandler :
 # Todos
 
 - Check current context to decide whether to create an IExternalEventHandler or to run code directly
+- Support progress
 - Support cancellation
 
 # Issues
