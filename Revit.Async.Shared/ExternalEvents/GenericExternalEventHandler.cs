@@ -58,8 +58,8 @@ namespace Revit.Async.ExternalEvents
         ///     Override this method to execute some business code
         /// </summary>
         /// <param name="app">The revit top-level object, <see cref="UIApplication" /></param>
-        /// <param name="parameter">The parameter wraps the argument and some methods to set result</param>
-        /// <param name="resultHandler"></param>
+        /// <param name="parameter">The parameter passed in</param>
+        /// <param name="resultHandler">The result handler</param>
         protected abstract void Execute(UIApplication                        app,
                                         TParameter                           parameter,
                                         IExternalEventResultHandler<TResult> resultHandler);
