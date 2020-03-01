@@ -4,6 +4,7 @@ Use Task-based asynchronous pattern (TAP) to run Revit API code from any executi
 [中文说明](https://github.com/KennanChan/Revit.Async/blob/master/说明.md)
 
 # Background
+
 If you have ever encountered a Revit API exception saying "Cannot execute Revit API outside of Revit API context",
 typically when you want to execute Revit API code from a modeless window, you may need this library to save your life.
 
@@ -14,6 +15,14 @@ This solution looks quite similar to the mechanism of "Promise" if you are famil
 Actually we can achieve all the above logic by making use of Task-based asynchronous pattern (TAP) which is generally known as Task<T> in .NET.
 By adopting Revit.Async, it's possible to run Revit API code from any context because internally Revit.Async wraps your code automatically with IExternalEventHandler and yields the return value to the calling context to make your invocation more natural.
 
+A [diagram](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing) showing how these two mechanisms work is [here](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing).
+
+or the maybe legacy screenshots:
+
+![Revit API](https://github.com/KennanChan/Revit.Async/blob/master/RevitExternalEvent.png)
+
+![Revit.Async](https://github.com/KennanChan/Revit.Async/blob/master/Revit.Async.png)
+
 If you are not familiar with Task-based asynchronous pattern (TAP), Here are some useful materials provided by Microsoft:
 
 https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
@@ -21,6 +30,7 @@ https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patter
 https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model
 
 # Examples
+
 ## Common approach ( without Revit.Async )
 ```csharp
 
