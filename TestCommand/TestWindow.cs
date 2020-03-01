@@ -1,5 +1,9 @@
-﻿using System.Windows;
+﻿#region Reference
+
+using System.Windows;
 using System.Windows.Controls;
+
+#endregion
 
 namespace TestCommand
 {
@@ -25,6 +29,7 @@ namespace TestCommand
                          {
                              Content             = new TextBlock {Text = "Save Random Family"},
                              Command             = new SaveFamilyCommand(),
+                             CommandParameter    = true,
                              VerticalAlignment   = VerticalAlignment.Center,
                              HorizontalAlignment = HorizontalAlignment.Center
                          };
