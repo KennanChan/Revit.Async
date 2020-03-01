@@ -1,7 +1,7 @@
 # Revit.Async
 Use Task-based asynchronous pattern (TAP) to run Revit API code from any execution context.
 
-[中文说明](https://github.com/KennanChan/Revit.Async/blob/master/说明.md)
+[中文说明](说明.md)
 
 # Background
 
@@ -19,9 +19,9 @@ A [diagram](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/vi
 
 or the maybe legacy screenshots:
 
-![Revit API](https://github.com/KennanChan/Revit.Async/blob/master/RevitExternalEvent.png)
+![Revit API](RevitExternalEvent.png)
 
-![Revit.Async](https://github.com/KennanChan/Revit.Async/blob/master/Revit.Async.png)
+![Revit.Async](Revit.Async.png)
 
 If you are not familiar with Task-based asynchronous pattern (TAP), Here are some useful materials provided by Microsoft:
 
