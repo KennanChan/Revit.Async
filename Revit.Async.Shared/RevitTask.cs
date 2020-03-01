@@ -87,7 +87,7 @@ namespace Revit.Async
         /// <inheritdoc />
         public void Register<TParameter, TResult>(IGenericExternalEventHandler<TParameter, TResult> handler)
         {
-            ScopedRegisteredExternalEvents.TryAdd(handler.GetType(), new ExternalEventPair(handler));
+            ScopedRegisteredExternalEvents.TryAdd(handler.GetType(), new ExternalEventPair(handler, () => CreateExternalEvent(handler)));
         }
 
         #endregion
