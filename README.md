@@ -15,7 +15,7 @@ After raising the trigger, within the same context, you have no idea when the ha
 If you do want to make this happen, you have to manually yield the control back to the calling context.
 
 This solution looks quite similar to the mechanism of "Promise" if you are familiar with JavaScript ES6.
-Actually we can achieve all the above logic by making use of task-based asynchronous pattern (TAP) which is generally known as `Task<T>` in .NET.
+Actually, we can achieve all the above logic by making use of task-based asynchronous pattern (TAP) which is generally known as `Task<T>` in .NET.
 By adopting Revit.Async, it is possible to run Revit API code from any context, because internally Revit.Async wraps your code automatically with `IExternalEventHandler` and yields the return value to the calling context to make your invocation more natural.
 
 If you are unfamiliar with the task-based asynchronous pattern (TAP), here is some useful material on it provided by Microsoft:
