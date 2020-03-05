@@ -29,9 +29,9 @@ Here is a [diagram comparing the Revit API external event mechnism with Revit.As
 
 If you are not familiar with Task-based asynchronous pattern (TAP), here is some useful material provided by Microsoft:
 
-https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
-
-https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model
+- [Task-based asynchronous pattern (TAP)
+](https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap)
+- [Task asynchronous programming model](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model)
 
 # Examples
 
