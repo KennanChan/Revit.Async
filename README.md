@@ -5,7 +5,7 @@ Use Task-based asynchronous pattern (TAP) to run Revit API code from any executi
 
 # Background
 
-If you have ever encountered a Revit API exception saying "Cannot execute Revit API outside of Revit API context",
+If you have ever encountered a Revit API exception saying, "Cannot execute Revit API outside of Revit API context",
 typically when you want to execute Revit API code from a modeless window, you may need this library to save your life.
 
 A common solution for this exception is to wrap the Revit API code using `IExternalEventHandler` and register the handler instance to Revit ahead of time to get a trigger (`ExternalEvent`).
