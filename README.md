@@ -20,7 +20,7 @@ By adopting Revit.Async, it is possible to run Revit API code from any context, 
 
 A [diagram](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing) showing how these two mechanisms work is [here](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing).
 
-or the maybe legacy screenshots:
+Alternatively, taker a look at these legacy screenshots:
 
 ## Revit API
 ![Revit API](RevitExternalEvent.png)
