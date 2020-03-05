@@ -18,12 +18,14 @@ This solution looks quite similar to the mechanism of "Promise" if you are famil
 Actually we can achieve all the above logic by making use of task-based asynchronous pattern (TAP) which is generally known as `Task<T>` in .NET.
 By adopting Revit.Async, it is possible to run Revit API code from any context, because internally Revit.Async wraps your code automatically with `IExternalEventHandler` and yields the return value to the calling context to make your invocation more natural.
 
-A [diagram](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing) showing how these two mechanisms work is [here](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing).
+Here is a [diagram comparing the Revit API external event mechnism with Revit.Async](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing) and screenshots of the two main parts:
 
 Alternatively, take a look at these legacy screenshots:
 
-## Revit API
+## Revit API External Event
+
 ![Revit API](RevitExternalEvent.png)
+
 ## Revit.Async
 ![Revit.Async](Revit.Async.png)
 
