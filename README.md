@@ -3,6 +3,7 @@ Use Task-based asynchronous pattern (TAP) to run Revit API code from any executi
 
 [中文说明](说明.md)
 
+[![NuGet Link](https://img.shields.io/nuget/v/Revit.Async)](https://www.nuget.org/packages/Revit.Async/)
 # Background
 
 If you have ever encountered a Revit API exception saying, "Cannot execute Revit API outside of Revit API context",
@@ -118,7 +119,7 @@ public class MyRevitCommand : IExternalCommand
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         //Always initialize RevitTask ahead of time within Revit API context
-        RevitTask.Initialze();
+        RevitTask.Initialize();
         var window = new MyWindow();
         //Show modeless window
         window.Show();
