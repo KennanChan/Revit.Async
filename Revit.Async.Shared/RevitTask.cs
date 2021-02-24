@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
 using Revit.Async.Entities;
@@ -21,45 +23,29 @@ namespace Revit.Async
     {
         #region Fields
 
-        private static ConcurrentDictionary<Type, ExternalEventPair> _asyncDelegateExternalEvents;
-        private static ConcurrentDictionary<Type, ExternalEventPair> _syncDelegateExternalEvents;
-        private static ConcurrentDictionary<Type, ExternalEventPair> _registeredExternalEvents;
-        private        ConcurrentDictionary<Type, ExternalEventPair> _scopedRegisteredExternalEvents;
+        private static ConcurrentDictionary<Type, FutureExternalEvent> _registeredExternalEvents;
+        private        ConcurrentDictionary<Type, FutureExternalEvent> _scopedRegisteredExternalEvents;
 
         #endregion
 
         #region Properties
 
         /// <summary>
-        ///     Cache all the created <see cref="ExternalEvent" />s and their <see cref="IExternalEventHandler" /> running async
-        ///     code
-        /// </summary>
-        private static ConcurrentDictionary<Type, ExternalEventPair> AsyncDelegateExternalEvents =>
-            _asyncDelegateExternalEvents ?? (_asyncDelegateExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
-
-        /// <summary>
         ///     Use to create any other external events
         /// </summary>
-        private static ExternalEventPair ExternalEventCreator { get; set; }
+        private static FutureExternalEvent FutureExternalEventCreator { get; set; }
 
         /// <summary>
         ///     Store the external events registered globally
         /// </summary>
-        private static ConcurrentDictionary<Type, ExternalEventPair> RegisteredExternalEvents =>
-            _registeredExternalEvents ?? (_registeredExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
-
-        /// <summary>
-        ///     Cache all the created <see cref="ExternalEvent" />s and their <see cref="IExternalEventHandler" /> running sync
-        ///     code
-        /// </summary>
-        private static ConcurrentDictionary<Type, ExternalEventPair> SyncDelegateExternalEvents =>
-            _syncDelegateExternalEvents ?? (_syncDelegateExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
+        private static ConcurrentDictionary<Type, FutureExternalEvent> RegisteredExternalEvents =>
+            _registeredExternalEvents ?? (_registeredExternalEvents = new ConcurrentDictionary<Type, FutureExternalEvent>());
 
         /// <summary>
         ///     Store the external events registered in current scope
         /// </summary>
-        private ConcurrentDictionary<Type, ExternalEventPair> ScopedRegisteredExternalEvents =>
-            _scopedRegisteredExternalEvents ?? (_scopedRegisteredExternalEvents = new ConcurrentDictionary<Type, ExternalEventPair>());
+        private ConcurrentDictionary<Type, FutureExternalEvent> ScopedRegisteredExternalEvents =>
+            _scopedRegisteredExternalEvents ?? (_scopedRegisteredExternalEvents = new ConcurrentDictionary<Type, FutureExternalEvent>());
 
         #endregion
 
@@ -70,15 +56,19 @@ namespace Revit.Async
         {
             _scopedRegisteredExternalEvents.Clear();
             _scopedRegisteredExternalEvents = null;
+#if DEBUG
+            Writer?.Close();
+            Writer?.Dispose();
+#endif
         }
 
         /// <inheritdoc />
         public Task<TResult> Raise<THandler, TParameter, TResult>(TParameter parameter)
             where THandler : IGenericExternalEventHandler<TParameter, TResult>
         {
-            if (ScopedRegisteredExternalEvents.TryGetValue(typeof(THandler), out var pair))
+            if (ScopedRegisteredExternalEvents.TryGetValue(typeof(THandler), out var futureExternalEvent))
             {
-                return pair.RunAsync<TParameter, TResult>(parameter);
+                return futureExternalEvent.RunAsync<TParameter, TResult>(parameter);
             }
 
             return TaskUtils.FromResult(default(TResult));
@@ -87,7 +77,7 @@ namespace Revit.Async
         /// <inheritdoc />
         public void Register<TParameter, TResult>(IGenericExternalEventHandler<TParameter, TResult> handler)
         {
-            ScopedRegisteredExternalEvents.TryAdd(handler.GetType(), new ExternalEventPair(handler, () => CreateExternalEvent(handler)));
+            ScopedRegisteredExternalEvents.TryAdd(handler.GetType(), new FutureExternalEvent(handler, () => CreateExternalEvent(handler)));
         }
 
         #endregion
@@ -100,9 +90,9 @@ namespace Revit.Async
         /// </summary>
         public static void Initialize()
         {
-            if (ExternalEventCreator == null)
+            if (FutureExternalEventCreator == null)
             {
-                ExternalEventCreator = new ExternalEventPair(new SyncDelegateExternalEventHandler<ExternalEvent>());
+                FutureExternalEventCreator = new FutureExternalEvent(new ExternalEventHandlerCreator());
             }
         }
 
@@ -126,9 +116,9 @@ namespace Revit.Async
         public static Task<TResult> RaiseGlobal<THandler, TParameter, TResult>(TParameter parameter)
             where THandler : IGenericExternalEventHandler<TParameter, TResult>
         {
-            if (RegisteredExternalEvents.TryGetValue(typeof(THandler), out var pair))
+            if (RegisteredExternalEvents.TryGetValue(typeof(THandler), out var futureExternalEvent))
             {
-                return pair.RunAsync<TParameter, TResult>(parameter);
+                return futureExternalEvent.RunAsync<TParameter, TResult>(parameter);
             }
 
             return TaskUtils.FromResult(default(TResult));
@@ -149,7 +139,7 @@ namespace Revit.Async
         /// <param name="handler">The instance of <see cref="IGenericExternalEventHandler{TParameter,TResult}" /></param>
         public static void RegisterGlobal<TParameter, TResult>(IGenericExternalEventHandler<TParameter, TResult> handler)
         {
-            RegisteredExternalEvents.TryAdd(handler.GetType(), new ExternalEventPair(handler));
+            RegisteredExternalEvents.TryAdd(handler.GetType(), new FutureExternalEvent(handler));
         }
 
         /// <summary>
@@ -171,12 +161,9 @@ namespace Revit.Async
         /// <returns>The result</returns>
         public static Task<TResult> RunAsync<TResult>(Func<UIApplication, TResult> function)
         {
-            var externalEventPair = SyncDelegateExternalEvents.GetOrAdd(typeof(TResult), _ =>
-            {
-                var handler = new SyncDelegateExternalEventHandler<TResult>();
-                return new ExternalEventPair(handler, () => CreateExternalEvent(handler));
-            });
-            return externalEventPair.RunAsync<Func<UIApplication, TResult>, TResult>(function);
+            var handler             = new SyncDelegateExternalEventHandler<TResult>();
+            var futureExternalEvent = new FutureExternalEvent(handler, () => CreateExternalEvent(handler));
+            return futureExternalEvent.RunAsync<Func<UIApplication, TResult>, TResult>(function);
         }
 
         /// <summary>
@@ -204,12 +191,9 @@ namespace Revit.Async
         /// <returns></returns>
         public static Task<TResult> RunAsync<TResult>(Func<UIApplication, Task<TResult>> function)
         {
-            var externalEventPair = AsyncDelegateExternalEvents.GetOrAdd(typeof(TResult), _ =>
-            {
-                var handler = new AsyncDelegateExternalEventHandler<TResult>();
-                return new ExternalEventPair(handler, () => CreateExternalEvent(handler));
-            });
-            return externalEventPair.RunAsync<Func<UIApplication, Task<TResult>>, TResult>(function);
+            var handler             = new AsyncDelegateExternalEventHandler<TResult>();
+            var futureExternalEvent = new FutureExternalEvent(handler, () => CreateExternalEvent(handler));
+            return futureExternalEvent.RunAsync<Func<UIApplication, Task<TResult>>, TResult>(function);
         }
 
         /// <summary>
@@ -259,16 +243,69 @@ namespace Revit.Async
             return RunAsync(app => function(app).ContinueWith(task => (object) null));
         }
 
+        [Conditional("DEBUG")]
+        internal static void Log(object obj)
+        {
+#if DEBUG
+            try
+            {
+                Writer.WriteLine($"[{DateTime.Now}] {obj}");
+                Writer.Flush();
+            }
+            catch
+            {
+                // ignored
+            }
+#endif
+        }
+
+        private static AsyncLocker Locker { get; } = new AsyncLocker();
+
         /// <summary>
         ///     Create a new <see cref="ExternalEvent" /> for an <see cref="IExternalEventHandler" /> instance
         /// </summary>
         /// <param name="handler">The <see cref="IExternalEventHandler" /> instance</param>
-        /// <returns>The <see cref="ExternalEvent" /> created</returns>
+        /// <returns>The <see cref="ExternalEvent" /> created</returns
+#if NET40
         private static Task<ExternalEvent> CreateExternalEvent(IExternalEventHandler handler)
         {
-            return ExternalEventCreator.RunAsync<Func<UIApplication, ExternalEvent>, ExternalEvent>(app => ExternalEvent.Create(handler));
+            return new TaskCompletionSource<ExternalEvent>().Await(Locker.LockAsync(), (unlockKey, tcs) =>
+            {
+                var creationTask = FutureExternalEventCreator
+                   .RunAsync<Func<ExternalEvent>, ExternalEvent>(() => ExternalEvent.Create(handler));
+                tcs.Await(creationTask, () => Autodesk.Windows.ComponentManager.Ribbon.Dispatcher.Invoke(new Action(unlockKey.Dispose)));
+            }).Task;
         }
+#else
+        private static async Task<ExternalEvent> CreateExternalEvent(IExternalEventHandler handler)
+        {
+            using (await Locker.LockAsync())
+            {
+                return await FutureExternalEventCreator.RunAsync<Func<ExternalEvent>, ExternalEvent>(() => ExternalEvent.Create(handler));
+            }
+        }
+#endif
 
         #endregion
+
+#if DEBUG
+        private static StreamWriter Writer { get; set; }
+        /// <summary>
+        ///     Always call this method ahead of time in Revit API context to make sure that <see cref="RevitTask" /> functions
+        ///     properly
+        /// </summary>
+        public static void Initialize(string logFile)
+        {
+            if (Writer == null)
+            {
+                if (!string.IsNullOrWhiteSpace(logFile))
+                {
+                    Writer = new StreamWriter(logFile);
+                }
+            }
+
+            Initialize();
+        }
+#endif
     }
 }

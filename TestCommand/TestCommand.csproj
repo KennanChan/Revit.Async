@@ -73,10 +73,18 @@
     <Compile Include="TestWindow.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Revit.Async.Test.addin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Revit.Async.NET40\Revit.Async.NET40.csproj">
       <Project>{5e45eddc-3211-40e0-a383-73435a79b7f8}</Project>
       <Name>Revit.Async.NET40</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /E /Q /Y  $(TargetDir)*.* %25ALLUSERSPROFILE%25\Autodesk\Revit\Addins\2018\*.*</PostBuildEvent>
+  </PropertyGroup>
 </Project>
