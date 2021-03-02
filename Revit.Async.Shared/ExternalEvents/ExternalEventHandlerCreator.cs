@@ -7,7 +7,7 @@ using Autodesk.Revit.UI;
 
 namespace Revit.Async.ExternalEvents
 {
-    internal class ExternalEventHandlerCreator : SyncGenericExternalEventHandler<Func<ExternalEvent>, ExternalEvent>
+    internal class ExternalEventHandlerCreator : SyncGenericExternalEventHandler<IExternalEventHandler, ExternalEvent>
     {
         #region Others
 
@@ -16,9 +16,14 @@ namespace Revit.Async.ExternalEvents
             return $"ExternalEventHandlerCreator-{Id}";
         }
 
-        protected override ExternalEvent Handle(UIApplication app, Func<ExternalEvent> parameter)
+        public override object Clone()
         {
-            return parameter();
+            return new ExternalEventHandlerCreator();
+        }
+
+        protected override ExternalEvent Handle(UIApplication app, IExternalEventHandler parameter)
+        {
+            return ExternalEvent.Create(parameter);
         }
 
         #endregion

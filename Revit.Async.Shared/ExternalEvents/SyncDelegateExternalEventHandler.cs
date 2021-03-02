@@ -22,6 +22,11 @@ namespace Revit.Async.ExternalEvents
             return $"SyncDelegateExternalEventHandler-{Id}";
         }
 
+        public override object Clone()
+        {
+            return new SyncDelegateExternalEventHandler<TResult>();
+        }
+
         protected override TResult Handle(
             UIApplication                app,
             Func<UIApplication, TResult> parameter)

@@ -19,6 +19,11 @@ namespace TestCommand
             return "GetRandomFamilyExternalEventHandler";
         }
 
+        public override object Clone()
+        {
+            return new GetRandomFamilyExternalEventHandler();
+        }
+
         protected override Family Handle(UIApplication app, bool parameter)
         {
             var document = app.ActiveUIDocument.Document;

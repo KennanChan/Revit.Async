@@ -66,5 +66,7 @@ namespace Revit.Async.ExternalEvents
                                         IExternalEventResultHandler<TResult> resultHandler);
 
         #endregion
+
+        public abstract object Clone();
     }
 }

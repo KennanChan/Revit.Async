@@ -78,9 +78,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Revit.Async.NET40\Revit.Async.NET40.csproj">
-      <Project>{5e45eddc-3211-40e0-a383-73435a79b7f8}</Project>
-      <Name>Revit.Async.NET40</Name>
+    <ProjectReference Include="..\Revit.Async\Revit.Async.csproj">
+      <Project>{03719e34-2891-4483-92eb-26e1a66b1287}</Project>
+      <Name>Revit.Async</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

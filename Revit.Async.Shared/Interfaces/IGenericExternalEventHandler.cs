@@ -1,5 +1,6 @@
 ﻿#region Reference
 
+using System;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
 
@@ -12,7 +13,7 @@ namespace Revit.Async.Interfaces
     /// </summary>
     /// <typeparam name="TParameter"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    public interface IGenericExternalEventHandler<in TParameter, TResult> : IExternalEventHandler
+    public interface IGenericExternalEventHandler<in TParameter, TResult> : IExternalEventHandler, ICloneable
     {
         #region Others
 
