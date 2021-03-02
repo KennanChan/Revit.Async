@@ -113,12 +113,13 @@ namespace Revit.Async.Entities
                   .Await(GetExternalEvent(), (externalEvent, tcs) =>
                    {
                        var request = externalEvent.Raise();
-                       RevitTask.Log($"{genericHandler.GetName()} {Enum.GetName(typeof(ExternalEventRequest), request)}");
+                       LogRequest(request);
                        tcs.Await(task);
                    }).Task;
 #else
             var externalEvent = await GetExternalEvent();
-            externalEvent.Raise();
+            var request       = externalEvent.Raise();
+            LogRequest(request);
             return await task;
 #endif
         }
@@ -126,6 +127,11 @@ namespace Revit.Async.Entities
         private Task<ExternalEvent> GetExternalEvent()
         {
             return CreatedExternalEvent != null ? TaskUtils.FromResult(CreatedExternalEvent) : ExternalEventCreationTask;
+        }
+
+        private void LogRequest(ExternalEventRequest request)
+        {
+            RevitTask.Log($"{Handler.GetName()} {Enum.GetName(typeof(ExternalEventRequest), request)}");
         }
 
         #endregion
