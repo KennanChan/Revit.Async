@@ -3,9 +3,15 @@
 using System;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
-using Revit.Async.Extensions;
 using Revit.Async.ExternalEvents;
+using Revit.Async.Interfaces;
 using Revit.Async.Utils;
+
+#if NET40
+using Autodesk.Windows;
+using Revit.Async.Extensions;
+
+#endif
 
 #endregion
 
@@ -18,13 +24,18 @@ namespace Revit.Async.Entities
         private FutureExternalEvent(IExternalEventHandler handler, ExternalEvent externalEvent)
         {
             Handler                   = handler;
+            CreatedExternalEvent      = externalEvent;
             ExternalEventCreationTask = TaskUtils.FromResult(externalEvent);
         }
 
         public FutureExternalEvent(IExternalEventHandler handler)
         {
-            Handler                   = handler;
-            ExternalEventCreationTask = CreateExternalEvent(handler);
+            Handler = handler;
+            ExternalEventCreationTask = CreateExternalEvent(handler).ContinueWith(task =>
+            {
+                CreatedExternalEvent = task.Result;
+                return CreatedExternalEvent;
+            });
         }
 
         #endregion
@@ -39,6 +50,7 @@ namespace Revit.Async.Entities
         private static bool                  HasInitialized            => FutureExternalEventCreator != null;
         private static AsyncLocker           Locker                    { get; } = new AsyncLocker();
         public         IExternalEventHandler Handler                   { get; }
+        private        ExternalEvent         CreatedExternalEvent      { get; set; }
         private        Task<ExternalEvent>   ExternalEventCreationTask { get; }
 
         #endregion
@@ -75,7 +87,7 @@ namespace Revit.Async.Entities
             return new TaskCompletionSource<ExternalEvent>().Await(Locker.LockAsync(), (unlockKey, tcs) =>
             {
                 var creationTask = FutureExternalEventCreator.RunAsync<IExternalEventHandler, ExternalEvent>(handler);
-                tcs.Await(creationTask, () => Autodesk.Windows.ComponentManager.Ribbon.Dispatcher.Invoke(new Action(unlockKey.Dispose)));
+                tcs.Await(creationTask, () => ComponentManager.Ribbon.Dispatcher.Invoke(new Action(unlockKey.Dispose)));
             }).Task;
         }
 #else
@@ -88,9 +100,32 @@ namespace Revit.Async.Entities
         }
 #endif
 
-        public Task<ExternalEvent> GetExternalEvent()
+#if NET40
+        internal Task<TResult> RunAsync<TParameter, TResult>(TParameter parameter)
+#else
+        public async Task<TResult> RunAsync<TParameter, TResult>(TParameter parameter)
+#endif
         {
-            return ExternalEventCreationTask;
+            var genericHandler = (IGenericExternalEventHandler<TParameter, TResult>) Handler;
+            var task           = genericHandler.Prepare(parameter);
+#if NET40
+            return new TaskCompletionSource<TResult>()
+                  .Await(GetExternalEvent(), (externalEvent, tcs) =>
+                   {
+                       var request = externalEvent.Raise();
+                       RevitTask.Log($"{genericHandler.GetName()} {Enum.GetName(typeof(ExternalEventRequest), request)}");
+                       tcs.Await(task);
+                   }).Task;
+#else
+            var externalEvent = await GetExternalEvent();
+            externalEvent.Raise();
+            return await task;
+#endif
+        }
+
+        private Task<ExternalEvent> GetExternalEvent()
+        {
+            return CreatedExternalEvent != null ? TaskUtils.FromResult(CreatedExternalEvent) : ExternalEventCreationTask;
         }
 
         #endregion
