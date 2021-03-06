@@ -1,37 +1,34 @@
 ﻿#region Reference
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
+using Revit.Async.Extensions;
 using Revit.Async.ExternalEvents;
 using Revit.Async.Interfaces;
 using Revit.Async.Utils;
-
-#if NET40
-using Autodesk.Windows;
-using Revit.Async.Extensions;
-
-#endif
 
 #endregion
 
 namespace Revit.Async.Entities
 {
-    internal class FutureExternalEvent : ICloneable
+    internal class FutureExternalEvent : ICloneable, IDisposable
     {
         #region Constructors
 
         private FutureExternalEvent(IExternalEventHandler handler, ExternalEvent externalEvent)
         {
-            Handler                   = handler;
-            CreatedExternalEvent      = externalEvent;
-            ExternalEventCreationTask = TaskUtils.FromResult(externalEvent);
+            Handler                  = handler;
+            CreatedExternalEvent     = externalEvent;
+            ExternalEventTaskCreator = () => TaskUtils.FromResult(externalEvent);
         }
 
         public FutureExternalEvent(IExternalEventHandler handler)
         {
             Handler = handler;
-            ExternalEventCreationTask = CreateExternalEvent(handler).ContinueWith(task =>
+            ExternalEventTaskCreator = () => CreateExternalEvent(handler).ContinueWith(task =>
             {
                 CreatedExternalEvent = task.Result;
                 return CreatedExternalEvent;
@@ -47,11 +44,12 @@ namespace Revit.Async.Entities
         /// </summary>
         private static FutureExternalEvent FutureExternalEventCreator { get; set; }
 
-        private static bool                  HasInitialized            => FutureExternalEventCreator != null;
-        private static AsyncLocker           Locker                    { get; } = new AsyncLocker();
-        public         IExternalEventHandler Handler                   { get; }
-        private        ExternalEvent         CreatedExternalEvent      { get; set; }
-        private        Task<ExternalEvent>   ExternalEventCreationTask { get; }
+        private static bool                       HasInitialized           => FutureExternalEventCreator != null;
+        private static AsyncLocker                Locker                   { get; } = new AsyncLocker();
+        private static ConcurrentQueue<UnlockKey> UnlockKeys               { get; } = new ConcurrentQueue<UnlockKey>();
+        public         IExternalEventHandler      Handler                  { get; }
+        private        ExternalEvent              CreatedExternalEvent     { get; set; }
+        private        Func<Task<ExternalEvent>>  ExternalEventTaskCreator { get; }
 
         #endregion
 
@@ -60,19 +58,45 @@ namespace Revit.Async.Entities
         public object Clone()
         {
             var handler = Handler is ICloneable cloneable ? cloneable.Clone() as IExternalEventHandler : Handler;
+            RevitTask.Log($"{handler?.GetName()} cloned from {Handler.GetName()}");
             return new FutureExternalEvent(handler);
+        }
+
+        public void Dispose()
+        {
+            CreatedExternalEvent?.Dispose();
         }
 
         #endregion
 
         #region Others
 
-        internal static void Initialize()
+        internal static void Initialize(UIControlledApplication application)
         {
             if (!HasInitialized)
             {
+                application.Idling += Application_Idling;
                 var handler = new ExternalEventHandlerCreator();
                 FutureExternalEventCreator = new FutureExternalEvent(handler, ExternalEvent.Create(handler));
+            }
+        }
+
+        internal static void Initialize(UIApplication application)
+        {
+            if (!HasInitialized)
+            {
+                application.Idling += Application_Idling;
+                var handler = new ExternalEventHandlerCreator();
+                FutureExternalEventCreator = new FutureExternalEvent(handler, ExternalEvent.Create(handler));
+            }
+        }
+
+        private static void Application_Idling(object sender, IdlingEventArgs e)
+        {
+            e.SetRaiseWithoutDelay();
+            while (UnlockKeys.TryDequeue(out var unlockKey))
+            {
+                unlockKey.Dispose();
             }
         }
 
@@ -81,29 +105,19 @@ namespace Revit.Async.Entities
         /// </summary>
         /// <param name="handler">The <see cref="IExternalEventHandler" /> instance</param>
         /// <returns>The <see cref="ExternalEvent" /> created</returns>
-#if NET40
         private static Task<ExternalEvent> CreateExternalEvent(IExternalEventHandler handler)
         {
             return new TaskCompletionSource<ExternalEvent>().Await(Locker.LockAsync(), (unlockKey, tcs) =>
             {
                 var creationTask = FutureExternalEventCreator.RunAsync<IExternalEventHandler, ExternalEvent>(handler);
-                tcs.Await(creationTask, () => ComponentManager.Ribbon.Dispatcher.Invoke(new Action(unlockKey.Dispose)));
+                tcs.Await(creationTask, () => UnlockKeys.Enqueue(unlockKey));
             }).Task;
         }
-#else
-        private static async Task<ExternalEvent> CreateExternalEvent(IExternalEventHandler handler)
-        {
-            using (await Locker.LockAsync())
-            {
-                return await FutureExternalEventCreator.RunAsync<IExternalEventHandler, ExternalEvent>(handler);
-            }
-        }
-#endif
 
 #if NET40
         internal Task<TResult> RunAsync<TParameter, TResult>(TParameter parameter)
 #else
-        public async Task<TResult> RunAsync<TParameter, TResult>(TParameter parameter)
+        internal async Task<TResult> RunAsync<TParameter, TResult>(TParameter parameter)
 #endif
         {
             var genericHandler = (IGenericExternalEventHandler<TParameter, TResult>) Handler;
@@ -112,26 +126,41 @@ namespace Revit.Async.Entities
             return new TaskCompletionSource<TResult>()
                   .Await(GetExternalEvent(), (externalEvent, tcs) =>
                    {
-                       var request = externalEvent.Raise();
-                       LogRequest(request);
-                       tcs.Await(task);
+                       if (Raise(externalEvent))
+                       {
+                           tcs.Await(task);
+                       }
+                       else
+                       {
+                           tcs.SetException(new Exception("ExternalEvent not accepted."));
+                       }
                    }).Task;
 #else
             var externalEvent = await GetExternalEvent();
-            var request       = externalEvent.Raise();
-            LogRequest(request);
-            return await task;
+            if (Raise(externalEvent))
+            {
+                return await task;
+            }
+
+            throw new Exception("ExternalEvent not accepted.");
 #endif
         }
 
         private Task<ExternalEvent> GetExternalEvent()
         {
-            return CreatedExternalEvent != null ? TaskUtils.FromResult(CreatedExternalEvent) : ExternalEventCreationTask;
+            return CreatedExternalEvent != null ? TaskUtils.FromResult(CreatedExternalEvent) : ExternalEventTaskCreator();
         }
 
         private void LogRequest(ExternalEventRequest request)
         {
             RevitTask.Log($"{Handler.GetName()} {Enum.GetName(typeof(ExternalEventRequest), request)}");
+        }
+
+        private bool Raise(ExternalEvent externalEvent)
+        {
+            var request = externalEvent.Raise();
+            LogRequest(request);
+            return request == ExternalEventRequest.Accepted;
         }
 
         #endregion

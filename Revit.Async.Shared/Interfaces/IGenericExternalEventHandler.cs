@@ -13,7 +13,7 @@ namespace Revit.Async.Interfaces
     /// </summary>
     /// <typeparam name="TParameter"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    public interface IGenericExternalEventHandler<in TParameter, TResult> : IExternalEventHandler, ICloneable
+    public interface IGenericExternalEventHandler<in TParameter, TResult> : ICloneableExternalEventHandler
     {
         #region Others
 

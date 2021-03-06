@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
 using Revit.Async.Entities;
@@ -93,9 +92,18 @@ namespace Revit.Async
         ///     Always call this method ahead of time in Revit API context to make sure that <see cref="RevitTask" /> functions
         ///     properly
         /// </summary>
-        public static void Initialize()
+        public static void Initialize(UIControlledApplication application)
         {
-            FutureExternalEvent.Initialize();
+            FutureExternalEvent.Initialize(application);
+        }
+
+        /// <summary>
+        ///     Always call this method ahead of time in Revit API context to make sure that <see cref="RevitTask" /> functions
+        ///     properly
+        /// </summary>
+        public static void Initialize(UIApplication application)
+        {
+            FutureExternalEvent.Initialize(application);
         }
 
         /// <summary>
@@ -273,14 +281,14 @@ namespace Revit.Async
             return RunAsync(app => function(app).ContinueWith(task => (object) null));
         }
 
+        [Conditional("LOG")]
         [Conditional("DEBUG")]
-        internal static void Log(object obj)
+        internal static void Log(object log)
         {
-#if DEBUG
+#if LOG || DEBUG
             try
             {
-                Writer.WriteLine($"[{DateTime.Now}] {obj}");
-                Writer.Flush();
+                Logger.Log(log);
             }
             catch
             {
@@ -291,23 +299,41 @@ namespace Revit.Async
 
         #endregion
 
-#if DEBUG
-        private static StreamWriter Writer { get; set; }
+#if LOG || DEBUG
+        private static ILog Logger { get; set; }
         /// <summary>
         ///     Always call this method ahead of time in Revit API context to make sure that <see cref="RevitTask" /> functions
         ///     properly
         /// </summary>
-        public static void Initialize(string logFile)
+        public static void Initialize(UIControlledApplication application, string logFile)
         {
-            if (Writer == null)
+            if (Logger == null)
             {
                 if (!string.IsNullOrWhiteSpace(logFile))
                 {
-                    Writer = new StreamWriter(logFile);
+                    Logger = new AsyncLogger(logFile);
                 }
             }
 
-            Initialize();
+            Initialize(application);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="application"></param>
+        /// <param name="logFile"></param>
+        public static void Initialize(UIApplication application, string logFile)
+        {
+            if (Logger == null)
+            {
+                if (!string.IsNullOrWhiteSpace(logFile))
+                {
+                    Logger = new AsyncLogger(logFile);
+                }
+            }
+
+            Initialize(application);
         }
 #endif
     }

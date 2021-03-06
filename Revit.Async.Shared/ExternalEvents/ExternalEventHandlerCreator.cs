@@ -23,6 +23,7 @@ namespace Revit.Async.ExternalEvents
 
         protected override ExternalEvent Handle(UIApplication app, IExternalEventHandler parameter)
         {
+            RevitTask.Log($"creating ExternalEvent for {parameter.GetName()}");
             return ExternalEvent.Create(parameter);
         }
 

@@ -12,11 +12,16 @@ namespace TestCommand
 {
     internal class GetRandomFamilyExternalEventHandler : SyncGenericExternalEventHandler<bool, Family>
     {
+        private static Random Random { get; }
+        static GetRandomFamilyExternalEventHandler()
+        {
+            Random = new Random(Environment.TickCount);
+        }
         #region Others
 
         public override string GetName()
         {
-            return "GetRandomFamilyExternalEventHandler";
+            return $"GetRandomFamilyExternalEventHandler-{Id}";
         }
 
         public override object Clone()
@@ -32,8 +37,7 @@ namespace TestCommand
                           .Cast<Family>()
                           .Where(family => !parameter || family.IsEditable)
                           .ToArray();
-            var random = new Random(Environment.TickCount);
-            return families[random.Next(0, families.Length)];
+            return families[Random.Next(0, families.Length)];
         }
 
         #endregion

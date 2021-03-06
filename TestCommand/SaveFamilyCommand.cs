@@ -45,6 +45,7 @@ namespace TestCommand
 
         public void Execute(object parameter)
         {
+
             for (var i = 0; i < 5; i++)
             {
                 RevitTask.RunAsync(async app =>
@@ -55,10 +56,10 @@ namespace TestCommand
                     {
                         //Support async task
                         //Raise global external event handler
-                        var randomFamily = await RevitTask.RaiseGlobal<GetRandomFamilyExternalEventHandler, bool, Family>(parameter as bool? ?? false);
+                        var randomFamily = await RevitTask.RaiseGlobalNew<GetRandomFamilyExternalEventHandler, bool, Family>(parameter as bool? ?? false);
 
                         //Raise scoped external event handler
-                        return await ScopedRevitTask.Raise<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
+                        return await ScopedRevitTask.RaiseNew<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
                     }
                     catch (Exception)
                     {
