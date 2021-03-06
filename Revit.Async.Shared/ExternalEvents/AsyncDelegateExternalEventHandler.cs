@@ -20,7 +20,12 @@ namespace Revit.Async.ExternalEvents
 
         public override string GetName()
         {
-            return "AsyncDelegateExternalEventHandler";
+            return $"AsyncDelegateExternalEventHandler-{Id}";
+        }
+
+        public override object Clone()
+        {
+            return new AsyncDelegateExternalEventHandler<TResult>();
         }
 
         protected override Task<TResult> Handle(

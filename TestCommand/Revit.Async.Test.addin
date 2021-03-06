@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Text>Revit.Async.Test</Text>
+    <Assembly>TestCommand.dll</Assembly>
+    <ClientId>98DA759C-0759-465D-8BC4-A3F7669AAD7C</ClientId>
+    <FullClassName>TestCommand.Command</FullClassName>
+    <LanguageType>Unknown</LanguageType>
+    <VisibilityMode>AlwaysVisible</VisibilityMode>
+    <VendorId>Kennan</VendorId>
+    <VendorDescription>https://github.com/KennanChan</VendorDescription>
+  </AddIn>
+</RevitAddIns>

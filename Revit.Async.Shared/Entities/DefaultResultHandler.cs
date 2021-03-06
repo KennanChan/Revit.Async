@@ -8,16 +8,13 @@ using Revit.Async.Interfaces;
 
 namespace Revit.Async.Entities
 {
-    internal class DefaultParameterAndResultHandlerPair<TParameter, TResult> :
+    internal class DefaultResultHandler<TResult> :
         IExternalEventResultHandler<TResult>
     {
         #region Constructors
 
-        public DefaultParameterAndResultHandlerPair(
-            TParameter                    parameter,
-            TaskCompletionSource<TResult> taskCompletionSource)
+        public DefaultResultHandler(TaskCompletionSource<TResult> taskCompletionSource)
         {
-            Parameter            = parameter;
             TaskCompletionSource = taskCompletionSource;
         }
 
@@ -25,7 +22,6 @@ namespace Revit.Async.Entities
 
         #region Properties
 
-        public  TParameter                    Parameter            { get; }
         private TaskCompletionSource<TResult> TaskCompletionSource { get; }
 
         #endregion

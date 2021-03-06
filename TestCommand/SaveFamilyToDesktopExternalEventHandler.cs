@@ -19,6 +19,11 @@ namespace TestCommand
             return "SaveFamilyToDesktopExternalEventHandler";
         }
 
+        public override object Clone()
+        {
+            return new SaveFamilyToDesktopExternalEventHandler();
+        }
+
         protected override string Handle(UIApplication app, Family parameter)
         {
             var document       = parameter.Document;

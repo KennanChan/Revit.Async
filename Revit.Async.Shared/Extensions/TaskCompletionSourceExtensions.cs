@@ -1,6 +1,7 @@
 ﻿#region Reference
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 #endregion
@@ -14,73 +15,94 @@ namespace Revit.Async.Extensions
         public static TaskCompletionSource<TResult> Await<TSource, TResult>(
             this TaskCompletionSource<TResult>             tcs,
             Task<TSource>                                  source,
-            Action<TSource, TaskCompletionSource<TResult>> onComplete)
+            Action<TSource, TaskCompletionSource<TResult>> onComplete,
+            Action                                         final = null)
         {
             source.ContinueWith(task =>
             {
-                if (task.IsCompleted)
+                try
                 {
-                    onComplete(task.Result, tcs);
+                    if (task.IsCompleted)
+                    {
+                        onComplete(task.Result, tcs);
+                    }
+                    else if (task.IsFaulted)
+                    {
+                        tcs.TrySetException(task.Exception ?? new Exception("Unknown Exception"));
+                    }
+                    else if (task.IsCanceled)
+                    {
+                        tcs.TrySetCanceled();
+                    }
                 }
-                else if (task.IsFaulted)
+                finally
                 {
-                    tcs.TrySetException(task.Exception ?? new Exception("Unknown Exception"));
+                    final?.Invoke();
                 }
-                else if (task.IsCanceled)
-                {
-                    tcs.TrySetCanceled();
-                }
-            });
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             return tcs;
         }
 
         public static TaskCompletionSource<TResult> Await<TSource, TResult>(
             this TaskCompletionSource<TResult> tcs,
             Task<TSource>                      source,
-            Action<TSource>                    onComplete)
+            Action<TSource>                    onComplete,
+            Action                             final = null)
         {
             source.ContinueWith(task =>
             {
-                if (task.IsCompleted)
+                try
                 {
-                    onComplete(task.Result);
+                    if (task.IsCompleted)
+                    {
+                        onComplete(task.Result);
+                    }
+                    else if (task.IsFaulted)
+                    {
+                        tcs.TrySetException(task.Exception ?? new Exception("Unknown Exception"));
+                    }
+                    else if (task.IsCanceled)
+                    {
+                        tcs.TrySetCanceled();
+                    }
                 }
-                else if (task.IsFaulted)
+                finally
                 {
-                    tcs.TrySetException(task.Exception ?? new Exception("Unknown Exception"));
+                    final?.Invoke();
                 }
-                else if (task.IsCanceled)
-                {
-                    tcs.TrySetCanceled();
-                }
-            });
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             return tcs;
         }
 
 #if NET40
-
-
-        public static TaskCompletionSource<TResult> Await<TResult>(this TaskCompletionSource<TResult> tcs, Task<TResult> source)
+        public static TaskCompletionSource<TResult> Await<TResult>(this TaskCompletionSource<TResult> tcs, Task<TResult> source, Action final = null)
         {
             source.ContinueWith(task =>
             {
-                if (task.IsCompleted)
+                try
                 {
-                    tcs.TrySetResult(task.Result);
+                    if (task.IsCompleted)
+                    {
+                        tcs.TrySetResult(task.Result);
+                    }
+                    else if (task.IsFaulted)
+                    {
+                        tcs.TrySetException(task.Exception ?? new Exception("Unknown Exception"));
+                    }
+                    else if (task.IsCanceled)
+                    {
+                        tcs.TrySetCanceled();
+                    }
                 }
-                else if (task.IsFaulted)
+                finally
                 {
-                    tcs.TrySetException(task.Exception ?? new Exception("Unknown Exception"));
+                    final?.Invoke();
                 }
-                else if (task.IsCanceled)
-                {
-                    tcs.TrySetCanceled();
-                }
-            });
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             return tcs;
         }
 #else
-        public static async void Await<TResult>(this TaskCompletionSource<TResult> tcs, Task<TResult> task)
+        public static async void Await<TResult>(this TaskCompletionSource<TResult> tcs, Task<TResult> task, Action final = null)
         {
             try
             {
@@ -103,6 +125,10 @@ namespace Revit.Async.Extensions
             catch (Exception e)
             {
                 tcs.TrySetException(e);
+            }
+            finally
+            {
+                final?.Invoke();
             }
         }
 #endif

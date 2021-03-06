@@ -49,6 +49,24 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithLog|AnyCPU'">
+    <OutputPath>bin\ReleaseWithLog\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithLog|x64'">
+    <OutputPath>bin\x64\ReleaseWithLog\</OutputPath>
+    <DefineConstants>TRACE;LOG</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -73,10 +91,18 @@
     <Compile Include="TestWindow.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Revit.Async.NET40\Revit.Async.NET40.csproj">
-      <Project>{5e45eddc-3211-40e0-a383-73435a79b7f8}</Project>
-      <Name>Revit.Async.NET40</Name>
+    <None Include="Revit.Async.Test.addin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Revit.Async\Revit.Async.csproj">
+      <Project>{03719e34-2891-4483-92eb-26e1a66b1287}</Project>
+      <Name>Revit.Async</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /E /Q /Y  $(TargetDir)*.* %25ALLUSERSPROFILE%25\Autodesk\Revit\Addins\2018\*.*</PostBuildEvent>
+  </PropertyGroup>
 </Project>
