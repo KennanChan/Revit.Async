@@ -1,6 +1,6 @@
 ﻿#region Reference
 
-using System.Collections.Concurrent;
+using System;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
 using Revit.Async.Entities;
@@ -14,16 +14,20 @@ namespace Revit.Async.ExternalEvents
     public abstract class GenericExternalEventHandler<TParameter, TResult> :
         IGenericExternalEventHandler<TParameter, TResult>
     {
-        #region Fields
+        #region Constructors
 
-        private ConcurrentQueue<DefaultParameterAndResultHandlerPair<TParameter, TResult>> _parameterQueue;
+        protected GenericExternalEventHandler()
+        {
+            Id = Guid.NewGuid();
+        }
 
         #endregion
 
         #region Properties
 
-        private ConcurrentQueue<DefaultParameterAndResultHandlerPair<TParameter, TResult>> ParameterQueue =>
-            _parameterQueue ?? (_parameterQueue = new ConcurrentQueue<DefaultParameterAndResultHandlerPair<TParameter, TResult>>());
+        public  Guid                                 Id            { get; }
+        private TParameter                           Parameter     { get; set; }
+        private IExternalEventResultHandler<TResult> ResultHandler { get; set; }
 
         #endregion
 
@@ -32,10 +36,7 @@ namespace Revit.Async.ExternalEvents
         /// <inheritdoc />
         public void Execute(UIApplication app)
         {
-            if (ParameterQueue.TryDequeue(out var data))
-            {
-                Execute(app, data.Parameter, data);
-            }
+            Execute(app, Parameter, ResultHandler);
         }
 
         /// <inheritdoc />
@@ -44,9 +45,9 @@ namespace Revit.Async.ExternalEvents
         /// <inheritdoc />
         public Task<TResult> Prepare(TParameter parameter)
         {
-            var tcs  = new TaskCompletionSource<TResult>();
-            var data = new DefaultParameterAndResultHandlerPair<TParameter, TResult>(parameter, tcs);
-            ParameterQueue.Enqueue(data);
+            Parameter = parameter;
+            var tcs = new TaskCompletionSource<TResult>();
+            ResultHandler = new DefaultResultHandler<TResult>(tcs);
             return tcs.Task;
         }
 
@@ -65,5 +66,7 @@ namespace Revit.Async.ExternalEvents
                                         IExternalEventResultHandler<TResult> resultHandler);
 
         #endregion
+
+        public abstract object Clone();
     }
 }

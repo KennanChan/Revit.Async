@@ -30,7 +30,11 @@ namespace TestCommand
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             //always initialize RevitTask in Revit API context before calling any RunAsync method
-            RevitTask.Initialize();
+#if LOG || DEBUG
+            RevitTask.Initialize(commandData.Application, @"D:\Revit.Async.log");
+#else
+            RevitTask.Initialize(commandData.Application);
+#endif
             //Register your own global generic external event handler
             RevitTask.RegisterGlobal(new GetRandomFamilyExternalEventHandler());
             var window = new TestWindow();

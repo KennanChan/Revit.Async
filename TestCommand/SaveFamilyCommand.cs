@@ -43,30 +43,37 @@ namespace TestCommand
 
         public event EventHandler CanExecuteChanged;
 
-        public async void Execute(object parameter)
+        public void Execute(object parameter)
         {
-            //Run Revit API directly here
-            var savePath = await RevitTask.RunAsync(async app =>
-            {
-                try
-                {
-                    //Support async task
-                    //Raise global external event handler
-                    var randomFamily = await RevitTask.RaiseGlobal<GetRandomFamilyExternalEventHandler, bool, Family>(parameter as bool? ?? false);
 
-                    //Raise scoped external event handler
-                    return await ScopedRevitTask.Raise<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-            });
-            var saveResult = !string.IsNullOrWhiteSpace(savePath);
-            MessageBox.Show($"Family {(saveResult ? "" : "not ")}saved:\n{savePath}");
-            if (saveResult && Path.GetDirectoryName(savePath) is string dir)
+            for (var i = 0; i < 5; i++)
             {
-                Process.Start(dir);
+                RevitTask.RunAsync(async app =>
+                {
+                    //Revit API can be executed directly here
+
+                    try
+                    {
+                        //Support async task
+                        //Raise global external event handler
+                        var randomFamily = await RevitTask.RaiseGlobalNew<GetRandomFamilyExternalEventHandler, bool, Family>(parameter as bool? ?? false);
+
+                        //Raise scoped external event handler
+                        return await ScopedRevitTask.RaiseNew<SaveFamilyToDesktopExternalEventHandler, Family, string>(randomFamily);
+                    }
+                    catch (Exception)
+                    {
+                        return null;
+                    }
+                }).ContinueWith(savePathTask =>
+                {
+                    var savePath = savePathTask.Result;
+                    var saveResult = !string.IsNullOrWhiteSpace(savePath);
+                    if (saveResult && Path.GetDirectoryName(savePath) is string dir)
+                    {
+                        Process.Start(dir);
+                    }
+                });
             }
         }
 
