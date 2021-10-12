@@ -119,7 +119,11 @@ public class MyRevitCommand : IExternalCommand
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         //Always initialize RevitTask ahead of time within Revit API context
-        RevitTask.Initialize();
+        // version 1.x.x
+        // RevitTask.Initialze();
+
+        // version 2.x.x
+        RevitTask.Initialize(commandData.Application);
         var window = new MyWindow();
         //Show modeless window
         window.Show();
@@ -207,7 +211,12 @@ public class MyRevitCommand : IExternalCommand
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        RevitTask.Initialize();
+        //Always initialize RevitTask ahead of time within Revit API context
+        // version 1.x.x
+        // RevitTask.Initialze();
+
+        // version 2.x.x
+        RevitTask.Initialize(commandData.Application);
         //Register SaveFamilyToDesktopExternalEventHandler ahead of time
         RevitTask.RegisterGlobal(new SaveFamilyToDesktopExternalEventHandler());
         var window = new MyWindow();
