@@ -3,35 +3,42 @@ Use Task-based asynchronous pattern (TAP) to run Revit API code from any executi
 
 [中文说明](说明.md)
 
+[![NuGet Link](https://img.shields.io/nuget/v/Revit.Async)](https://www.nuget.org/packages/Revit.Async/)
 # Background
 
-If you have ever encountered a Revit API exception saying "Cannot execute Revit API outside of Revit API context",
+If you have ever encountered a Revit API exception saying, "Cannot execute Revit API outside of Revit API context",
 typically when you want to execute Revit API code from a modeless window, you may need this library to save your life.
 
-A common solution for this exception is to wrap the Revit API code using IExternalEventHandler and register the handler instance to Revit ahead of time to get a trigger(ExternalEvent).To execute the handler, just raise the trigger from anywhere to queue the handler to the revit command loop.
-But there comes another problem. After raising the trigger, within the same context, you have no idea when the handler will be executed and it's not easy to get some result generated from that handler. If you do want to make this happen, you have to manually yield the control back to the calling context.
+A common solution for this exception is to wrap the Revit API code using `IExternalEventHandler` and register the handler instance to Revit ahead of time to get a trigger (`ExternalEvent`).
+To execute the handler, just raise the trigger from anywhere to queue the handler to the Revit command loop.
+But there comes another problem.
+After raising the trigger, within the same context, you have no idea when the handler will be executed and it's not easy to get some result generated from that handler.
+If you do want to make this happen, you have to manually yield the control back to the calling context.
 
 This solution looks quite similar to the mechanism of "Promise" if you are familiar with JavaScript ES6.
-Actually we can achieve all the above logic by making use of Task-based asynchronous pattern (TAP) which is generally known as Task<T> in .NET.
-By adopting Revit.Async, it's possible to run Revit API code from any context because internally Revit.Async wraps your code automatically with IExternalEventHandler and yields the return value to the calling context to make your invocation more natural.
+Actually, we can achieve all the above logic by making use of task-based asynchronous pattern (TAP) which is generally known as `Task<T>` in .NET.
+By adopting Revit.Async, it is possible to run Revit API code from any context, because internally Revit.Async wraps your code automatically with `IExternalEventHandler` and yields the return value to the calling context to make your invocation more natural.
 
-A [diagram](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing) showing how these two mechanisms work is [here](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing).
+If you are unfamiliar with the task-based asynchronous pattern (TAP), here is some useful material on it provided by Microsoft:
 
-or the maybe legacy screenshots:
+- [Task-based asynchronous pattern (TAP)
+](https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap)
+- [Task asynchronous programming model](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model)
+
+Here is a [diagram comparing the Revit API external event mechanism with Revit.Async](https://drive.google.com/file/d/1sb6Yrlt6zjkE9XBh4UB5sWV_i8nTpkmG/view?usp=sharing) and
+screenshots of the two main parts:
+
+## Revit API External Event
 
 ![Revit API](RevitExternalEvent.png)
 
+## Revit.Async
 ![Revit.Async](Revit.Async.png)
-
-If you are not familiar with Task-based asynchronous pattern (TAP), Here are some useful materials provided by Microsoft:
-
-https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
-
-https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model
 
 # Examples
 
-## Common approach ( without Revit.Async )
+## Standard approach (without Revit.Async)
+
 ```csharp
 
 [Transaction(TransactionMode.Manual)]
@@ -102,7 +109,9 @@ public class ButtonCommand : ICommand
     }
 }
 ```
-## Revit.Async approach
+
+## Revit.Async Approach
+
 ```csharp
 [Transaction(TransactionMode.Manual)]
 public class MyRevitCommand : IExternalCommand
@@ -182,11 +191,14 @@ public class ButtonCommand : ICommand
     }
 }
 ```
+
 ## Define your own handler
 
-Fed up with the weak `IExternalEventHandler` interface? Use the `IGenericExternalEventHandler<TParameter,TResult>` interface instead. It provides you with the ability to pass argument to a handler and receive result on complete.
+Fed up with the weak `IExternalEventHandler` interface?
+Use the `IGenericExternalEventHandler<TParameter,TResult>` interface instead.
+It provides you with the ability to pass argument to a handler and receive result on complete.
 
-It's always recommended to derive from the predefined abstract classes, they are designed to handle the argument passing and result returning part.
+It's always recommended to derive from the predefined abstract classes; they are designed to handle the argument passing and result returning part.
 
 | Class                                                   | Description                       |
 | ------------------------------------------------------- | --------------------------------- |
@@ -305,9 +317,7 @@ public class SaveFamilyToDesktopExternalEventHandler :
 }
 ```
 
-
-
-# Todos
+# Todo
 
 - Check current context to decide whether to create an IExternalEventHandler or to run code directly
 - Support progress
@@ -315,4 +325,4 @@ public class SaveFamilyToDesktopExternalEventHandler :
 
 # Issues
 
-Feel free to contact me by 303353762@qq.com if you have any issue when using this library
+Feel free to contact me by 303353762@qq.com if you have any issue using this library.
