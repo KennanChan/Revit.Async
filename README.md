@@ -66,7 +66,7 @@ In a WPF application, if you want to update the UI from a worker thread, you nee
 
 In Revit world, it is almost the same. Revit API is used to update the models. Revit performs model updates on the main thread and it requires all the APIs to be called on the main thread too, for thread safety I think.
 
-If you want to update the models from a worker thread, you need to use `ExternalEvent` object to queue(`Raise()`) an `IExternalEvent` instance to main thread to call Revit API. This is the asynchronous pattern that Revit provides to schedule new API calls.
+If you want to update the models from a worker thread, you need to use `ExternalEvent` object to queue(`Raise()`) an `IExternalEventHandler` instance to main thread to call Revit API. This is the asynchronous pattern that Revit provides to schedule new API calls.
 
 As to Revit.Async, it is just a wrapper around the above asynchronous pattern. The goal of this library is to provide an out of the box experience for asynchronous Revit API.
 
