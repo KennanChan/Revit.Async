@@ -363,3 +363,8 @@ public class SaveFamilyToDesktopExternalEventHandler :
 # Issues
 
 Feel free to contact me by 303353762@qq.com if you have any issue using this library.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=KennanChan/Revit.Async&type=Date)](https://star-history.com/#KennanChan/Revit.Async&Date)
+
