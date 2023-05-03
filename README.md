@@ -72,6 +72,97 @@ As to Revit.Async, it is just a wrapper around the above asynchronous pattern. T
 
 There is definitely **NO** multithread thing in Revit.Async.
 
+# Usage
+## Initialize
+In any valid Revit API context, initialize RevitTask before you use any functionality of RevitTask.
+```csharp
+RevitTask.Initialize(app);
+```
+
+Some of the valid Revit API contexts are:
+* IExternalCommand.Execute method
+* IExternalApplication.OnStartup method
+* IExternalEventHandler.Execute method
+* Revit API event handlers
+* IUpdater
+
+## RunAsync
+The main functionality of Revit.Async is exposed by `RevitTask.RunAsync()` method.
+There are multiple overloads for `RevitTask.RunAsync()` method.
+
+### RunAsync with sync code, no return value
+* `Task RunAsync(Action action)`
+```csharp
+await RevitTask.RunAsync(() =>
+{
+    // sync function without return value
+})
+```
+* `Task RunAsync(Action<UIApplication> action)`
+```csharp
+await RevitTask.RunAsync((uiApp) =>
+{
+    // sync function without return value
+})
+```
+### RunAsync with sync code, has return value
+* `Task<T> RunAsync<T>(Func<T> func)`
+```csharp
+var result = await RevitTask.RunAsync(() =>
+{
+    // sync function with return value
+    return 0;
+})
+// result will be 0
+```
+* `Task<T> RunAsync<T>(Func<UIApplication, T> func)`
+```csharp
+var result = await RevitTask.RunAsync((uiApp) =>
+{
+    // sync function with return value
+    return 0;
+})
+// result will be 0
+```
+### RunAsync with async code, no return value
+* `Task RunAsync(Func<Task> func)`
+```csharp
+await RevitTask.RunAsync(async () =>
+{
+    // async function without return value
+})
+```
+* `Task RunAsync(Func<UIApplication, Task> func)`
+```csharp
+await RevitTask.RunAsync(async (uiApp) =>
+{
+    // async function without return value
+})
+```
+### RunAsync with async code, has return value
+* `Task<T> RunAsync<T>(Func<Task<T>> func)`
+```csharp
+var result = await RevitTask.RunAsync(async () =>
+{
+    // async function with return value, http request as an example
+    var httpResponse = await http.Get("server api url");
+    //
+    return httpResponse;
+})
+// result will be the http response
+```
+* `Task<T> RunAsync<T>(Func<UIApplication, Task<T>> func)`
+```csharp
+var result = await RevitTask.RunAsync(async (uiApp) =>
+{
+    // async function with return value, http request as an example
+    var httpResponse = await http.Get("server api url");
+    //
+    return httpResponse;
+})
+// result will be the http response
+```
+
 # Examples
 
 ## Standard approach (without Revit.Async)
