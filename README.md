@@ -90,7 +90,7 @@ Some of the valid Revit API contexts are:
 The main functionality of Revit.Async is exposed by `RevitTask.RunAsync()` method.
 There are multiple overloads for `RevitTask.RunAsync()` method.
 
-### RunAsync with sync code, no return value
+### Execute sync code, without return value
 * `Task RunAsync(Action action)`
 ```csharp
 await RevitTask.RunAsync(() =>
@@ -102,10 +102,10 @@ await RevitTask.RunAsync(() =>
 ```csharp
 await RevitTask.RunAsync((uiApp) =>
 {
-    // sync function without return value
+    // sync function without return value, with uiApp paramter to access Revit DB
 })
 ```
-### RunAsync with sync code, has return value
+### Execute sync code, with return value
 * `Task<T> RunAsync<T>(Func<T> func)`
 ```csharp
 var result = await RevitTask.RunAsync(() =>
@@ -119,12 +119,12 @@ var result = await RevitTask.RunAsync(() =>
 ```csharp
 var result = await RevitTask.RunAsync((uiApp) =>
 {
-    // sync function with return value
+    // sync function with return value, with uiApp paramter to access Revit DB
     return 0;
 })
 // result will be 0
 ```
-### RunAsync with async code, no return value
+### Execute async code, without return value
 * `Task RunAsync(Func<Task> func)`
 ```csharp
 await RevitTask.RunAsync(async () =>
@@ -136,10 +136,10 @@ await RevitTask.RunAsync(async () =>
 ```csharp
 await RevitTask.RunAsync(async (uiApp) =>
 {
-    // async function without return value
+    // async function without return value, with uiApp paramter to access Revit DB
 })
 ```
-### RunAsync with async code, has return value
+### Execute async code, with return value
 * `Task<T> RunAsync<T>(Func<Task<T>> func)`
 ```csharp
 var result = await RevitTask.RunAsync(async () =>
@@ -155,7 +155,7 @@ var result = await RevitTask.RunAsync(async () =>
 ```csharp
 var result = await RevitTask.RunAsync(async (uiApp) =>
 {
-    // async function with return value, http request as an example
+    // async function with return value, with uiApp paramter to access Revit DB, http request as an example
     var httpResponse = await http.Get("server api url");
     //
     return httpResponse;
