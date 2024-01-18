@@ -103,6 +103,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /E /Q /Y  $(TargetDir)*.* %25ALLUSERSPROFILE%25\Autodesk\Revit\Addins\2018\*.*</PostBuildEvent>
+    <PostBuildEvent>xcopy /E /Q /Y  $(TargetDir)*.* %25ALLUSERSPROFILE%25\Autodesk\Revit\Addins\2024\*.*</PostBuildEvent>
   </PropertyGroup>
 </Project>
