@@ -49,10 +49,6 @@ namespace Revit.Async
         {
             _scopedRegisteredExternalEvents.Clear();
             _scopedRegisteredExternalEvents = null;
-#if DEBUG
-            Writer?.Close();
-            Writer?.Dispose();
-#endif
         }
 
         /// <inheritdoc />

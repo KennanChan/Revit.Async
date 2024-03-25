@@ -22,17 +22,17 @@ namespace TestCommand
 
         private void InitializeComponents()
         {
-            Width                 = 200;
-            Height                = 100;
+            Width = 200;
+            Height = 100;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             var button = new Button
-                         {
-                             Content             = new TextBlock {Text = "Save Random Family"},
-                             Command             = new SaveFamilyCommand(),
-                             CommandParameter    = true,
-                             VerticalAlignment   = VerticalAlignment.Center,
-                             HorizontalAlignment = HorizontalAlignment.Center
-                         };
+            {
+                Content = new TextBlock { Text = "Save Random Family" },
+                Command = new SaveFamilyCommand(),
+                CommandParameter = true,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
             Content = button;
         }
 

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<PlatformTarget>x64</PlatformTarget>
+		<AssemblyName>Revit.Async</AssemblyName>
+		<RootNamespace>Revit.Async</RootNamespace>
+	</PropertyGroup>
+
+	<Import Project="..\Revit.Async.Shared\Revit.Async.Shared.projitems" Label="Shared" />
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="rmdir /s /q $(SolutionDir)build\$(ConfigurationName)\net_standard_21&#xD;&#xA;xcopy /y /v $(TargetDir)*.*  $(SolutionDir)build\$(ConfigurationName)\net_standard_21\*.*" />
+	</Target>
+
+	<ItemGroup>
+		<Reference Include="RevitAPI">
+			<HintPath>C:\Program Files\Autodesk\Revit Preview Release\RevitAPI.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="RevitAPIUI">
+			<HintPath>C:\Program Files\Autodesk\Revit Preview Release\RevitAPIUI.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
+
+</Project>
