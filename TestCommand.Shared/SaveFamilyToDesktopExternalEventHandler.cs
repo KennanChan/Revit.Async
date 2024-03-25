@@ -12,6 +12,8 @@ namespace TestCommand
 {
     public class SaveFamilyToDesktopExternalEventHandler : SyncGenericExternalEventHandler<Family, string>
     {
+        private static string _desktop;
+        private static string Desktop => _desktop ?? (_desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
         #region Others
 
         public override string GetName()
@@ -28,10 +30,26 @@ namespace TestCommand
         {
             var document       = parameter.Document;
             var familyDocument = document.EditFamily(parameter);
-            var desktop        = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            var path           = Path.Combine(desktop, $"{parameter.Name}.rfa");
+            var path = GetFamilyFileName(parameter);
             familyDocument.SaveAs(path, new SaveAsOptions {OverwriteExistingFile = true});
             return path;
+        }
+
+        private string GetFamilyFileName(Family family)
+        {
+            var index = 0;
+            while(true)
+            {
+                var path = Path.Combine(Desktop, $"{family.Name}-{index}.rfa");
+                if (File.Exists(path))
+                {
+                    index++;
+                }
+                else 
+                {
+                    return path;
+                }
+            }
         }
 
         #endregion

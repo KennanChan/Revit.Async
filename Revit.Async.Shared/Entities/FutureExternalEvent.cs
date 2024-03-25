@@ -93,8 +93,12 @@ namespace Revit.Async.Entities
 
         private static void Application_Idling(object sender, IdlingEventArgs e)
         {
+            if (UnlockKeys.IsEmpty)
+            {
+                return;
+            }
             e.SetRaiseWithoutDelay();
-            while (UnlockKeys.TryDequeue(out var unlockKey))
+            if (UnlockKeys.TryDequeue(out var unlockKey))
             {
                 unlockKey.Dispose();
             }

@@ -107,6 +107,6 @@
   <Import Project="..\TestCommand.Shared\TestCommand.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /E /Q /Y  $(TargetDir)*.* %25ALLUSERSPROFILE%25\Autodesk\Revit\Addins\2025\*.*</PostBuildEvent>
+    <PostBuildEvent>xcopy /E /Q /Y  $(TargetDir)*.* %25ALLUSERSPROFILE%25\Autodesk\Revit\Addins\2018\*.*</PostBuildEvent>
   </PropertyGroup>
 </Project>
