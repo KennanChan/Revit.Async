@@ -5,6 +5,9 @@
 		<PlatformTarget>x64</PlatformTarget>
 		<AssemblyName>Revit.Async</AssemblyName>
 		<RootNamespace>Revit.Async</RootNamespace>
+		<Version>$(VersionPrefix)</Version>
+		<AssemblyVersion>2.1.1.0</AssemblyVersion>
+		<FileVersion>2.1.1.0</FileVersion>
 	</PropertyGroup>
 
 	<Import Project="..\Revit.Async.Shared\Revit.Async.Shared.projitems" Label="Shared" />
