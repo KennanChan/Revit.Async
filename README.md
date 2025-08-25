@@ -36,41 +36,23 @@ screenshots of the two main parts:
 ![Revit.Async](Revit.Async.png)
 
 # Revit.Async and Multithread
-I was frequently asked about whether Revit.Async runs Revit API in a background thread.
+I am often asked if Revit.Async runs the Revit API in a background thread. The answer is **no**. The term "Async" is misleading; it originates from .NET's naming convention for certain multithreaded methods, but it does not mean multithreading in this context.
 
-Let's clarify it. The answer is **NO!!!!!** Don't be misled by the word "Async".
+To clarify, we must distinguish between asynchronous and multithreaded programming. As a Stack Overflow answer explains: "Threading is about workers; asynchrony is about tasks." Consider this analogy:
 
-The word "Async" is actually innocent here. It is .NET who names a bunch of multithread methods with "Async" ending that results in the general misunderstanding.
+*   **Synchronous:** You cook eggs, then you cook toast.
+*   **Asynchronous, single-threaded:** You start the eggs and set a timer. You start the toast and set a timer. While they cook, you clean the kitchen. When the timers go off, you serve the food.
+*   **Asynchronous, multithreaded:** You hire two additional cooks to handle the eggs and toast separately, which requires coordination and resource management.
 
-This question can be explained starting from the differences between Asynchronous Programming and Multithread Programming.
+The common misconception that "asynchronous equals multithreaded" arises because multithreading operations often use asynchronous. In most UI applications, a background thread runs a task, but the results must be sent back to the main UI thread for presentation. The asynchronous pattern handles this "go back" phase.
 
-A word from [stackoverflow](https://stackoverflow.com/a/34681101/12922826):
+This is consistent across frameworks:
+*   In Windows Forms, you use `Invoke` to queue a delegate to the main thread.
+*   In WPF, you use the `Dispatcher` to queue a delegate to the main thread.
 
-> "Threading is about workers; asynchrony is about tasks".
+Similarly, the Revit API requires all model updates to be executed on the main thread for thread safety. To update models from a worker thread, you must use an `ExternalEvent` to queue (via `Raise()`) an `IExternalEventHandler` instance, which will call the Revit API on the main thread. This is the asynchronous pattern Revit provides.
 
-An analogy from the same stackoverflow answer:
-
-> You are cooking in a restaurant. An order comes in for eggs and toast.
-> 
-> Synchronous: you cook the eggs, then you cook the toast.
-> 
-> Asynchronous, single threaded: you start the eggs cooking and set a timer. You start the toast cooking, and set a timer. While they are both cooking, you clean the kitchen. When the timers go off you take the eggs off the heat and the toast out of the toaster and serve them.
-> 
-> Asynchronous, multithreaded: you hire two more cooks, one to cook eggs and one to cook toast. Now you have the problem of coordinating the cooks so that they do not conflict with each other in the kitchen when sharing resources. And you have to pay them.
-
-The reason why people have the "asynchronous == multithread" misunderstanding is that asynchronous has a big chance to come with multithread. In most UI applications(STA), when we use multithread to run a background task, the result of that task needs to "go back" to the UI thread to be presented. Asynchronous takes its part in the "go back" phase.
-
-In a windows form application, if you want to update the UI from a worker thread, you need to use `Invoke` method to queue a `Delegate` to main thread to perform the UI updates.
-
-In a WPF application, if you want to update the UI from a worker thread, you need to use `Dispatcher` object to queue a `Delegate` to main thread to perform the UI updates. 
-
-In Revit world, it is almost the same. Revit API is used to update the models. Revit performs model updates on the main thread and it requires all the APIs to be called on the main thread too, for thread safety I think.
-
-If you want to update the models from a worker thread, you need to use `ExternalEvent` object to queue(`Raise()`) an `IExternalEventHandler` instance to main thread to call Revit API. This is the asynchronous pattern that Revit provides to schedule new API calls.
-
-As to Revit.Async, it is just a wrapper around the above asynchronous pattern. The goal of this library is to provide an out of the box experience for asynchronous Revit API.
-
-There is definitely **NO** multithread thing in Revit.Async.
+Revit.Async is simply a wrapper around this built-in pattern. Its goal is to provide an out-of-the-box experience for asynchronous Revit API calls. There is **no** multithreading involved in Revit.Async.
 
 # Usage
 ## Initialize
