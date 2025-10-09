@@ -55,24 +55,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Install .NET Framework 4.0 Targeting Pack
-      run: |
-        # 下载并安装 .NET Framework 4.0 开发者包
-        $targetingPackUrl = "https://download.microsoft.com/download/8/E/1/8E1DBEFC-99EB-4DE1-9A3D-6D8E0E2EC6E6/NDP40-TargetingPack-KB2468871.exe"
-        $installerPath = "$env:TEMP\NDP40-TargetingPack.exe"
-        
-        Invoke-WebRequest -Uri $targetingPackUrl -OutFile $installerPath
-        Start-Process -FilePath $installerPath -ArgumentList "/quiet", "/norestart" -Wait
-        
-    - name: Install .NET Framework 4.5 Targeting Pack
-      run: |
-        # 下载并安装 .NET Framework 4.5 开发者包
-        $targetingPackUrl = "https://download.microsoft.com/download/A/1/D/A1D07600-6915-4CB8-A931-9A980EFC1C1C/NDP45-TargetingPack-KB2901954.exe"
-        $installerPath = "$env:TEMP\NDP45-TargetingPack.exe"
-        
-        Invoke-WebRequest -Uri $targetingPackUrl -OutFile $installerPath
-        Start-Process -FilePath $installerPath -ArgumentList "/quiet", "/norestart" -Wait
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
