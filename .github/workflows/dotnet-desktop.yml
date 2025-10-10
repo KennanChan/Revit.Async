@@ -89,19 +89,19 @@ jobs:
         
     - name: Build .NET Framework 4.0 project
       run: |
-        $solutionFile = ${{ env.SOLUTION_FILE }}
+        $solutionFile = "${{ env.SOLUTION_FILE }}"
         $solutionDir = [System.IO.Path]::GetDirectoryName((Get-Item $solutionFile).FullName)
         msbuild Revit.Async.NET40/Revit.Async.NET40.csproj /p:Configuration=Release /p:Platform="x64" /p:TargetFrameworkVersion=v4.0 /p:SolutionDir="$solutionDir\"
         
     - name: Build .NET Framework 4.5 project  
       run: |
-        $solutionFile = ${{ env.SOLUTION_FILE }}
+        $solutionFile = "${{ env.SOLUTION_FILE }}"
         $solutionDir = [System.IO.Path]::GetDirectoryName((Get-Item $solutionFile).FullName)
         msbuild Revit.Async/Revit.Async.csproj /p:Configuration=Release /p:Platform="x64" /p:TargetFrameworkVersion=v4.5 /p:SolutionDir="$solutionDir\"
         
     - name: Build .NET Standard 2.1 project
       run: |
-        $solutionFile = ${{ env.SOLUTION_FILE }}
+        $solutionFile = "${{ env.SOLUTION_FILE }}"
         $solutionDir = [System.IO.Path]::GetDirectoryName((Get-Item $solutionFile).FullName)
         dotnet build Revit.Async.NET.Standard/Revit.Async.NET.Standard.csproj --configuration Release --framework netstandard2.1 /p:SolutionDir="$solutionDir\"
         
