@@ -63,10 +63,14 @@ jobs:
         
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.1
+
+    - name: Download NuGet.exe
+      run: |
+        Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/v6.6.1/nuget.exe" -OutFile "nuget.exe"
       
     - name: Restore NuGet packages
       run: |
-        nuget restore ${{ env.SOLUTION_FILE }} -Verbosity detailed
+        .\nuget restore ${{ env.SOLUTION_FILE }} -Verbosity detailed -PackagesDirectory packages
 
     - name: Diagnostic - Check project structure
       run: |
