@@ -55,30 +55,55 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+        
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
-    - name: Setup MSBuild for .NET Framework
+    - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.1
+
+    - name: Download NuGet.exe
+      run: |
+        Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/v6.6.1/nuget.exe" -OutFile "nuget.exe"
       
     - name: Restore NuGet packages
       run: |
-        nuget restore ${{ env.SOLUTION_FILE }}
+        .\nuget restore ${{ env.SOLUTION_FILE }} -Verbosity detailed -PackagesDirectory packages
+
+    - name: Diagnostic - Check project structure
+      run: |
+        # 检查项目文件
+        Get-ChildItem -Recurse -Filter *.csproj | ForEach-Object { 
+          Write-Host "Project: $($_.Name)"
+          Get-Content $_.FullName | Select-String "PackageReference|Reference"
+        }
+        
+    - name: Diagnostic - Check NuGet packages
+      run: |
+        # 检查包恢复情况
+        if (Test-Path "packages") {
+          Get-ChildItem -Recurse packages | ForEach-Object { Write-Host "Package: $($_.FullName)" }
+        }
         
     - name: Build .NET Framework 4.0 project
       run: |
-        msbuild Revit.Async.NET40/Revit.Async.NET40.csproj /p:Configuration=Release /p:Platform="x64" /p:TargetFrameworkVersion=v4.0
+        $solutionFile = "${{ env.SOLUTION_FILE }}"
+        $solutionDir = [System.IO.Path]::GetDirectoryName((Get-Item $solutionFile).FullName)
+        msbuild Revit.Async.NET40/Revit.Async.NET40.csproj /p:Configuration=Release /p:Platform="x64" /p:TargetFrameworkVersion=v4.0 /p:SolutionDir="$solutionDir\"
         
     - name: Build .NET Framework 4.5 project  
       run: |
-        msbuild Revit.Async/Revit.Async.csproj /p:Configuration=Release /p:Platform="x64" /p:TargetFrameworkVersion=v4.5
+        $solutionFile = "${{ env.SOLUTION_FILE }}"
+        $solutionDir = [System.IO.Path]::GetDirectoryName((Get-Item $solutionFile).FullName)
+        msbuild Revit.Async/Revit.Async.csproj /p:Configuration=Release /p:Platform="x64" /p:TargetFrameworkVersion=v4.5 /p:SolutionDir="$solutionDir\"
         
     - name: Build .NET Standard 2.1 project
       run: |
-        dotnet build Revit.Async.NET.Standard/Revit.Async.NET.Standard.csproj --configuration Release --framework netstandard2.1
+        $solutionFile = "${{ env.SOLUTION_FILE }}"
+        $solutionDir = [System.IO.Path]::GetDirectoryName((Get-Item $solutionFile).FullName)
+        dotnet build Revit.Async.NET.Standard/Revit.Async.NET.Standard.csproj --configuration Release --framework netstandard2.1 /p:SolutionDir="$solutionDir\"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
