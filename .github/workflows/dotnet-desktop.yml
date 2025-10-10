@@ -66,9 +66,22 @@ jobs:
       
     - name: Restore NuGet packages
       run: |
-        nuget restore ${{ env.SOLUTION_FILE }}
-        nuget restore Revit.Async.NET40/Revit.Async.NET40.csproj
-        nuget restore Revit.Async/Revit.Async.csproj
+        nuget restore ${{ env.SOLUTION_FILE }} -Verbosity detailed
+
+    - name: Diagnostic - Check project structure
+      run: |
+        # 检查项目文件
+        Get-ChildItem -Recurse -Filter *.csproj | ForEach-Object { 
+          Write-Host "Project: $($_.Name)"
+          Get-Content $_.FullName | Select-String "PackageReference|Reference"
+        }
+        
+    - name: Diagnostic - Check NuGet packages
+      run: |
+        # 检查包恢复情况
+        if (Test-Path "packages") {
+          Get-ChildItem -Recurse packages | ForEach-Object { Write-Host "Package: $($_.FullName)" }
+        }
         
     - name: Build .NET Framework 4.0 project
       run: |
